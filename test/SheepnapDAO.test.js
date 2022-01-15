@@ -9,7 +9,9 @@ require('chai')
     .use(require('chai-as-promised'))
     .should()
 
-contract('TokenFarm', ([owner, staker]) =>
-{
 
+
+contract('Staking', ([owner, staker]) =>
+{
+    //voter twice
 });
