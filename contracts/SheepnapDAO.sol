@@ -3,18 +3,18 @@
 pragma solidity >=0.7.0 <0.9.0;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "./Staking.sol";
+import "./Stakable.sol";
 import "./Voting.sol";
 /**
  * @title Sheepnap DAO.
  * @dev Set & change owner
  */
-contract SheepnapDAO is stakable
+contract SheepnapDAO is Stakable
 {
     using SafeMath for uint256;
 
     ERC20 private token;
-    //==== DAO system parameters ====   
+    //==== DAO system parameters ===
     uint private tokenAmountForApprovalRequest = 100;
     uint private approvalRequestDaysToVote = 10; 
     uint private approvalPercentage = 50;
@@ -35,6 +35,7 @@ contract SheepnapDAO is stakable
     mapping(address => mapping(address => bool)) private voters;
 
     constructor(address _tokenaddress)
+        Stakable(ERC20(_tokenaddress))
     {
         token = ERC20(_tokenaddress);
     }
@@ -45,7 +46,7 @@ contract SheepnapDAO is stakable
         require(!accommodations[_accomodationaddress].activeVoting
         , 'Accommodation has an active voting process');
 
-        require(woolToken.balanceOf(msg.sender) >= woolAmountForApprovalRequest, 
+        require(token.balanceOf(msg.sender) >= tokenAmountForApprovalRequest, 
             'Incorrect amount for approval request');
 
         Accommodation memory newAccommodation = Accommodation(
@@ -55,11 +56,11 @@ contract SheepnapDAO is stakable
           totalVoters : 0,
           registrationDate : block.timestamp,
           activeVoting : true,
-          treasureAmount : woolAmountForApprovalRequest
+          treasureAmount : tokenAmountForApprovalRequest
         });
 
         accommodations[_accomodationaddress] = newAccommodation;
-        woolToken.transferFrom(msg.sender, address(this), _stakingamount);
+        token.transferFrom(msg.sender, address(this), tokenAmountForApprovalRequest);
     }
 
     function vote(
@@ -67,14 +68,14 @@ contract SheepnapDAO is stakable
       bool _vote) public 
     {
         require(stakersActive[msg.sender], 'Voter must be an staker');
-        require(stakers[msg.sender].amount > 0, 'Voter must have active stake');
+        require(stakers[msg.sender].balance > 0, 'Voter must have active stake');
         
         require(voters[_accommodationaddress][msg.sender], "The voter already voted.");
 
         require(accommodations[_accommodationaddress].activeVoting, 'Accommodation has not active voting');
-        require(!checkExpiry(accommodations[_accomodationaddress].registrationDate), 'Voting has ended');
+        require(!checkExpiry(accommodations[_accommodationaddress].registrationDate), 'Voting has ended');
 
-        Accommodation storage accommodation = accommodations[_accomodationaddress];
+        Accommodation storage accommodation = accommodations[_accommodationaddress];
         if(_vote){
             accommodation.totalYes++;
         }
@@ -82,27 +83,26 @@ contract SheepnapDAO is stakable
         accommodation.totalVoters++;
     }       
 
-    function checkExpiry() private view returns(uint _starttimestamp)
+    function checkExpiry(uint _starttimestamp) private view returns(bool)
     {   
         return _starttimestamp + (approvalRequestDaysToVote * 1 days) >= block.timestamp;     
     }
 
     function getVotingPower(address _stakerAddress) public view returns (uint256)
     {
-        return stakers[_stakerAddress].amount;
+        return stakers[_stakerAddress].balance;
     }
 
     function finalizevoting(address _accomodationaddress) public 
-    {
+    {   
         require(accommodations[_accomodationaddress].activeVoting, "Voting is ended");
         require(checkExpiry(accommodations[_accomodationaddress].registrationDate), 'Voting has not ended');
-        require(accommodationActiveVoting[_accommodationaddress], 'Accommodation has not active process');
 
         Accommodation storage accommodation = accommodations[_accomodationaddress];
         
         if(
-               getPercentage(accommodation.totalYes, totalVoters) > approvalPercentage
-            && getPercentage(totalVoters, totalStakers) > minimalPercentageVoters)
+               getPercentage(accommodation.totalYes, accommodation.totalVoters) > approvalPercentage
+            && getPercentage(accommodation.totalVoters, totalStakers) > minimalPercentageVoters)
         {
             accommodation.isApproved = true;
         }
@@ -113,9 +113,8 @@ contract SheepnapDAO is stakable
     function withdrawvotingrewards(address _accomodationaddress) public 
     {
         require(!accommodations[_accomodationaddress].activeVoting, "Voting has not ended");
-
         Accommodation storage accommodation = accommodations[_accomodationaddress];
-        uint rewards = accommodation.treasureAmount.div(totalVoters);
+        uint rewards = accommodation.treasureAmount.div(accommodation.totalVoters);
         token.transferFrom(address(this), msg.sender, rewards);
     }
 
@@ -125,6 +124,8 @@ contract SheepnapDAO is stakable
     }
 
     //=== EVENTS ===== //
+    event ApprovalRequestCreated(address _accommodation);
     event Voting(address indexed user, bool vote);
-        
+    event WithdrawRewards(address _staker);
+
 }

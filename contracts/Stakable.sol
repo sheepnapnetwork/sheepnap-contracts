@@ -2,7 +2,7 @@
 pragma solidity >=0.7.0 <0.9.0;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-contract Staking
+contract Stakable
 {
   struct Staker
   {
@@ -45,11 +45,6 @@ contract Staking
     woolToken.transfer(address(this), stakers[msg.sender].balance);
     stakersActive[msg.sender] = false;
   }
-
-  function withdrawRewards(address _staker) public
-  {
-    woolToken.transfer(msg.sender, balance);
-  } 
 
   function addAmountToTreasure(uint _amount) internal
   {

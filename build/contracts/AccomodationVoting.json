@@ -1,0 +1,245 @@
+{
+  "contractName": "AccomodationVoting",
+  "abi": [
+    {
+      "inputs": [],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    }
+  ],
+  "metadata": "{\"compiler\":{\"version\":\"0.8.11+commit.d7f03943\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"project:/contracts/Voting.sol\":\"AccomodationVoting\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":false,\"runs\":200},\"remappings\":[]},\"sources\":{\"@openzeppelin/contracts/token/ERC20/ERC20.sol\":{\"keccak256\":\"0xd1d8caaeb45f78e0b0715664d56c220c283c89bf8b8c02954af86404d6b367f8\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://300a0cc7be3b26c96c22a47ffa9530a585e1c4f2dba3021d9bf309dc63007487\",\"dweb:/ipfs/QmQmxsvxK6CaJmQ4D8vDCYPLHMqcMmZLcBqedG4GFAbzu9\"]},\"@openzeppelin/contracts/token/ERC20/IERC20.sol\":{\"keccak256\":\"0x61437cb513a887a1bbad006e7b1c8b414478427d33de47c5600af3c748f108da\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://2c3d0973630ed74f2b5ce3944677a885dc70ec32fc83b35f55045a10224da32b\",\"dweb:/ipfs/QmbefZ5RoEZKNHXCALfh683PnaNYzKPcKMFjyY1DVAgq8A\"]},\"@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol\":{\"keccak256\":\"0x8de418a5503946cabe331f35fe242d3201a73f67f77aaeb7110acb1f30423aca\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://5a376d3dda2cb70536c0a45c208b29b34ac560c4cb4f513a42079f96ba47d2dd\",\"dweb:/ipfs/QmZQg6gn1sUpM8wHzwNvSnihumUCAhxD119MpXeKp8B9s8\"]},\"@openzeppelin/contracts/utils/Context.sol\":{\"keccak256\":\"0xe2e337e6dde9ef6b680e07338c493ebea1b5fd09b43424112868e9cc1706bca7\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://6df0ddf21ce9f58271bdfaa85cde98b200ef242a05a3f85c2bc10a8294800a92\",\"dweb:/ipfs/QmRK2Y5Yc6BK7tGKkgsgn3aJEQGi5aakeSPZvS65PV8Xp3\"]},\"project:/contracts/Voting.sol\":{\"keccak256\":\"0xf9826aa81f8349e4c6c1b9a9e23bec56efc11d1b848ff627a2f4d613bf245e62\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://363650df4513bbc343aec0fb74b7af8d1ebec44be954768c39cad23542368876\",\"dweb:/ipfs/QmWxHeuhLM6PETgTyDx4w7WiUqbdQYNCnxFGmsTjK7EPai\"]}},\"version\":1}",
+  "bytecode": "0x6080604052348015600f57600080fd5b50603f80601d6000396000f3fe6080604052600080fdfea26469706673582212205eac18b64acd52a6c667fec8586930f02920879222f7bcd97a9452a597bf6ee364736f6c634300080b0033",
+  "deployedBytecode": "0x6080604052600080fdfea26469706673582212205eac18b64acd52a6c667fec8586930f02920879222f7bcd97a9452a597bf6ee364736f6c634300080b0033",
+  "immutableReferences": {},
+  "generatedSources": [],
+  "deployedGeneratedSources": [],
+  "sourceMap": "121:71:10:-:0;;;155:34;;;;;;;;;;121:71;;;;;;",
+  "deployedSourceMap": "121:71:10:-:0;;;;;",
+  "source": "// SPDX-License-Identifier: MIT\npragma solidity >=0.7.0 <0.9.0;\nimport \"@openzeppelin/contracts/token/ERC20/ERC20.sol\";\n\ncontract AccomodationVoting\n{\n    constructor()\n    {\n        \n    }\n\n}",
+  "sourcePath": "/Users/santiagomarinrojas/Documents/GitHub/sheepnap-contracts/contracts/Voting.sol",
+  "ast": {
+    "absolutePath": "project:/contracts/Voting.sol",
+    "exportedSymbols": {
+      "AccomodationVoting": [
+        1604
+      ],
+      "Context": [
+        670
+      ],
+      "ERC20": [
+        545
+      ],
+      "IERC20": [
+        623
+      ],
+      "IERC20Metadata": [
+        648
+      ]
+    },
+    "id": 1605,
+    "license": "MIT",
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 1598,
+        "literals": [
+          "solidity",
+          ">=",
+          "0.7",
+          ".0",
+          "<",
+          "0.9",
+          ".0"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "32:31:10"
+      },
+      {
+        "absolutePath": "@openzeppelin/contracts/token/ERC20/ERC20.sol",
+        "file": "@openzeppelin/contracts/token/ERC20/ERC20.sol",
+        "id": 1599,
+        "nameLocation": "-1:-1:-1",
+        "nodeType": "ImportDirective",
+        "scope": 1605,
+        "sourceUnit": 546,
+        "src": "64:55:10",
+        "symbolAliases": [],
+        "unitAlias": ""
+      },
+      {
+        "abstract": false,
+        "baseContracts": [],
+        "canonicalName": "AccomodationVoting",
+        "contractDependencies": [],
+        "contractKind": "contract",
+        "fullyImplemented": true,
+        "id": 1604,
+        "linearizedBaseContracts": [
+          1604
+        ],
+        "name": "AccomodationVoting",
+        "nameLocation": "130:18:10",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "body": {
+              "id": 1602,
+              "nodeType": "Block",
+              "src": "173:16:10",
+              "statements": []
+            },
+            "id": 1603,
+            "implemented": true,
+            "kind": "constructor",
+            "modifiers": [],
+            "name": "",
+            "nameLocation": "-1:-1:-1",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 1600,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "166:2:10"
+            },
+            "returnParameters": {
+              "id": 1601,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "173:0:10"
+            },
+            "scope": 1604,
+            "src": "155:34:10",
+            "stateMutability": "nonpayable",
+            "virtual": false,
+            "visibility": "public"
+          }
+        ],
+        "scope": 1605,
+        "src": "121:71:10",
+        "usedErrors": []
+      }
+    ],
+    "src": "32:160:10"
+  },
+  "legacyAST": {
+    "absolutePath": "project:/contracts/Voting.sol",
+    "exportedSymbols": {
+      "AccomodationVoting": [
+        1604
+      ],
+      "Context": [
+        670
+      ],
+      "ERC20": [
+        545
+      ],
+      "IERC20": [
+        623
+      ],
+      "IERC20Metadata": [
+        648
+      ]
+    },
+    "id": 1605,
+    "license": "MIT",
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 1598,
+        "literals": [
+          "solidity",
+          ">=",
+          "0.7",
+          ".0",
+          "<",
+          "0.9",
+          ".0"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "32:31:10"
+      },
+      {
+        "absolutePath": "@openzeppelin/contracts/token/ERC20/ERC20.sol",
+        "file": "@openzeppelin/contracts/token/ERC20/ERC20.sol",
+        "id": 1599,
+        "nameLocation": "-1:-1:-1",
+        "nodeType": "ImportDirective",
+        "scope": 1605,
+        "sourceUnit": 546,
+        "src": "64:55:10",
+        "symbolAliases": [],
+        "unitAlias": ""
+      },
+      {
+        "abstract": false,
+        "baseContracts": [],
+        "canonicalName": "AccomodationVoting",
+        "contractDependencies": [],
+        "contractKind": "contract",
+        "fullyImplemented": true,
+        "id": 1604,
+        "linearizedBaseContracts": [
+          1604
+        ],
+        "name": "AccomodationVoting",
+        "nameLocation": "130:18:10",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "body": {
+              "id": 1602,
+              "nodeType": "Block",
+              "src": "173:16:10",
+              "statements": []
+            },
+            "id": 1603,
+            "implemented": true,
+            "kind": "constructor",
+            "modifiers": [],
+            "name": "",
+            "nameLocation": "-1:-1:-1",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 1600,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "166:2:10"
+            },
+            "returnParameters": {
+              "id": 1601,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "173:0:10"
+            },
+            "scope": 1604,
+            "src": "155:34:10",
+            "stateMutability": "nonpayable",
+            "virtual": false,
+            "visibility": "public"
+          }
+        ],
+        "scope": 1605,
+        "src": "121:71:10",
+        "usedErrors": []
+      }
+    ],
+    "src": "32:160:10"
+  },
+  "compiler": {
+    "name": "solc",
+    "version": "0.8.11+commit.d7f03943.Emscripten.clang"
+  },
+  "networks": {},
+  "schemaVersion": "3.4.3",
+  "updatedAt": "2022-01-20T19:38:35.949Z",
+  "devdoc": {
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  }
+}
