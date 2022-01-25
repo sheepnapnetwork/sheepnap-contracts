@@ -40,6 +40,22 @@ contract SheepnapDAO is Stakable
         token = ERC20(_tokenaddress);
     }
 
+    function getTokenAmountForApprovalRequest() public view returns (uint){
+        return tokenAmountForApprovalRequest;
+    }
+
+    function getApprovalRequestDaysToVote() public view returns (uint){
+        return approvalRequestDaysToVote;
+    }
+
+    function getApprovalPercentage() public view returns (uint){
+        return approvalPercentage;
+    }
+
+    function getMinimalPercentageVoters() public view returns (uint){
+        return minimalPercentageVoters;
+    }
+
     function startAccomodationApprovalRequest(
         address _accomodationaddress) public
     {
