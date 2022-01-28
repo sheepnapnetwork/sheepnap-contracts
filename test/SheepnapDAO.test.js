@@ -10,7 +10,7 @@ require('chai')
     .use(require('chai-as-promised'))
     .should()
 
-contract('SheepnapDAO', ([owner, staker]) =>
+contract('SheepnapDAO', ([owner, stakerOne, stakerTwo, propertyOwner ]) =>
 {
     let sheepnapDAO, woolToken, booken, property;
 
@@ -19,8 +19,22 @@ contract('SheepnapDAO', ([owner, staker]) =>
         woolToken = await WoolToken.new();
         booken = await Booken.new();
         sheepnapDAO = await SheepnapDAO.new(woolToken.address);
+        propertyContract = await Property.new();
+        var weiToTransfer = web3.utils.toWei('1000', 'ether')
 
-        //woolToken.tra
+        //user distribution
+        await woolToken.transfer(stakerOne, weiToTransfer);
+        await woolToken.transfer(stakerTwo, weiToTransfer);
+        
+    });
+
+    describe('Initial stakers distribution', async() => 
+    {
+        it('Initial distribution is correct', async() => 
+        {
+            var stakerOneBalance = await woolToken.balanceOf(stakerOne);
+            assert.equal(stakerOneBalance, web3.utils.toWei('1000'));
+        });
     });
 
     describe('Initial Wool Token mint', async() => {
@@ -48,11 +62,75 @@ contract('SheepnapDAO', ([owner, staker]) =>
         });
     });
 
-    describe('', async() => {
+    describe('Staking', async() => {
 
+        it('Shouldnt allow 0 staking amount', async()=>
+        {
+            //TODO : how to expect exceptions
+        });
+
+        it('Initial staking is correct', async() =>
+        {
+            var stakingAmount = web3.utils.toWei('100');
+            var stakingAmountStakerTwo = web3.utils.toWei('300');
+
+            await woolToken
+            .approve(sheepnapDAO.address, stakingAmount, 
+                { from : stakerOne });
+
+            await sheepnapDAO.stake(stakingAmount, 
+                { from : stakerOne });
+
+            await woolToken
+            .approve(sheepnapDAO.address, stakingAmountStakerTwo, 
+                { from : stakerTwo });
+
+            await sheepnapDAO.stake(stakingAmountStakerTwo, 
+                { from : stakerTwo });
+            
+            //Checking staking balances
+            var stakingAmountResult = await sheepnapDAO.getStakeAmount({ from : stakerOne });
+            var stakingAmountTwoResult = await sheepnapDAO.getStakeAmount({ from : stakerTwo });
+            
+            assert.equal(stakingAmountResult.toString(), web3.utils.toWei('100'));
+            assert.equal(stakingAmountTwoResult.toString(), web3.utils.toWei('300'));
+        });
+    });
+
+    describe('Property registration and approval request', async() => {
+
+        it('Property registration', async() =>
+        {   
+            var amount = web3.utils.toWei('100');
+            
+            await woolToken
+            .approve(sheepnapDAO.address, amount, 
+                { from : propertyOwner });
+
+            await woolToken.transfer(propertyOwner, amount);
+
+            await sheepnapDAO.approvalRequest(propertyContract.address, 
+                { from : propertyOwner });
+            
+            var activeVoting = await sheepnapDAO.getPropertyActiveVoting(propertyContract.address);
+            assert.equal(activeVoting, true);
+        });
 
     });
 
+    describe('Property voting', async() => 
+    {
+        it('Staker can vote yes', async() =>
+        {
+            await sheepnapDAO.vote(propertyContract.address, true, 
+                { from : stakerOne });
 
+            var approvalRequest = await sheepnapDAO
+                .getApprovalRequestInfo(propertyContract.address);
+
+            assert.equal(approvalRequest.totalVoters, '1');
+            assert.equal(approvalRequest.totalYes, '1');
+        });
+    });
 
 });

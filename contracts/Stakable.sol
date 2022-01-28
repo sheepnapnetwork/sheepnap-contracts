@@ -34,7 +34,6 @@ contract Stakable
     
     stakersActive[msg.sender] = true;    
     stakers[msg.sender] = staker;
-
     woolToken.transferFrom(msg.sender, address(this), _stakingamount);
   }
 
@@ -44,6 +43,11 @@ contract Stakable
 
     woolToken.transfer(address(this), stakers[msg.sender].balance);
     stakersActive[msg.sender] = false;
+  }
+
+  function getStakeAmount() public view returns (uint)
+  {
+    return stakers[msg.sender].balance;
   }
 
   function addAmountToTreasure(uint _amount) internal

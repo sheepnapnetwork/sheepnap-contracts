@@ -20,7 +20,7 @@ contract SheepnapDAO is Stakable
     uint private approvalPercentage = 50;
     uint private minimalPercentageVoters = 30; 
     
-    struct Accommodation 
+    struct Property 
     {
         bool isApproved;
         uint totalYes;
@@ -30,7 +30,7 @@ contract SheepnapDAO is Stakable
         uint treasureAmount;
     }
 
-    mapping(address => Accommodation) private accommodations;
+    mapping(address => Property) private properties;
     //voters, accommodation contract, vote
     mapping(address => mapping(address => bool)) private voters;
 
@@ -56,16 +56,26 @@ contract SheepnapDAO is Stakable
         return minimalPercentageVoters;
     }
 
-    function startAccomodationApprovalRequest(
-        address _accomodationaddress) public
+    function getApprovalRequestInfo(address _propertyaddress) public view returns (Property memory)
     {
-        require(!accommodations[_accomodationaddress].activeVoting
+        return properties[_propertyaddress];
+    }
+
+    function getPropertyActiveVoting(address _propertyaddress) 
+        public view returns(bool)
+    {
+        return properties[_propertyaddress].activeVoting;
+    }
+
+    function approvalRequest(address _propertyaddress) public
+    {
+        require(!properties[_propertyaddress].activeVoting
         , 'Accommodation has an active voting process');
 
         require(token.balanceOf(msg.sender) >= tokenAmountForApprovalRequest, 
             'Incorrect amount for approval request');
 
-        Accommodation memory newAccommodation = Accommodation(
+        Property memory newProperty = Property(
         {
           isApproved : false,
           totalYes : 0,
@@ -75,28 +85,28 @@ contract SheepnapDAO is Stakable
           treasureAmount : tokenAmountForApprovalRequest
         });
 
-        accommodations[_accomodationaddress] = newAccommodation;
+        properties[_propertyaddress] = newProperty;
         token.transferFrom(msg.sender, address(this), tokenAmountForApprovalRequest);
     }
 
     function vote(
-      address _accommodationaddress, 
+      address _propertyaddress, 
       bool _vote) public 
     {
         require(stakersActive[msg.sender], 'Voter must be an staker');
         require(stakers[msg.sender].balance > 0, 'Voter must have active stake');
         
-        require(voters[_accommodationaddress][msg.sender], "The voter already voted.");
+        //require(voters[_propertyaddress][msg.sender], "The voter already voted.");
 
-        require(accommodations[_accommodationaddress].activeVoting, 'Accommodation has not active voting');
-        require(!checkExpiry(accommodations[_accommodationaddress].registrationDate), 'Voting has ended');
+        require(properties[_propertyaddress].activeVoting, 'Accommodation has not active voting');
+        require(checkExpiry(properties[_propertyaddress].registrationDate), 'Voting has ended');
 
-        Accommodation storage accommodation = accommodations[_accommodationaddress];
+        Property storage property = properties[_propertyaddress];
         if(_vote){
-            accommodation.totalYes++;
+            property.totalYes++;
         }
 
-        accommodation.totalVoters++;
+        property.totalVoters++;
     }       
 
     function checkExpiry(uint _starttimestamp) private view returns(bool)
@@ -109,28 +119,27 @@ contract SheepnapDAO is Stakable
         return stakers[_stakerAddress].balance;
     }
 
-    function finalizevoting(address _accomodationaddress) public 
+    function finalizevoting(address _propertyaddress) public 
     {   
-        require(accommodations[_accomodationaddress].activeVoting, "Voting is ended");
-        require(checkExpiry(accommodations[_accomodationaddress].registrationDate), 'Voting has not ended');
+        require(properties[_propertyaddress].activeVoting, "Voting is ended");
+        require(checkExpiry(properties[_propertyaddress].registrationDate), 'Voting has not ended');
 
-        Accommodation storage accommodation = accommodations[_accomodationaddress];
+        Property storage property = properties[_propertyaddress];
         
-        if(
-               getPercentage(accommodation.totalYes, accommodation.totalVoters) > approvalPercentage
-            && getPercentage(accommodation.totalVoters, totalStakers) > minimalPercentageVoters)
+        if(getPercentage(property.totalYes, property.totalVoters) > approvalPercentage
+            && getPercentage(property.totalVoters, totalStakers) > minimalPercentageVoters)
         {
-            accommodation.isApproved = true;
+            property.isApproved = true;
         }
 
-        accommodation.activeVoting = false;
+        property.activeVoting = false;
     }
 
-    function withdrawvotingrewards(address _accomodationaddress) public 
+    function withdrawvotingrewards(address _propertyaddress) public 
     {
-        require(!accommodations[_accomodationaddress].activeVoting, "Voting has not ended");
-        Accommodation storage accommodation = accommodations[_accomodationaddress];
-        uint rewards = accommodation.treasureAmount.div(accommodation.totalVoters);
+        require(!properties[_propertyaddress].activeVoting, "Voting has not ended");
+        Property storage property = properties[_propertyaddress];
+        uint rewards = property.treasureAmount.div(property.totalVoters);
         token.transferFrom(address(this), msg.sender, rewards);
     }
 
@@ -143,5 +152,4 @@ contract SheepnapDAO is Stakable
     event ApprovalRequestCreated(address _accommodation);
     event Voting(address indexed user, bool vote);
     event WithdrawRewards(address _staker);
-
 }

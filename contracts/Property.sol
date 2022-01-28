@@ -6,12 +6,12 @@ pragma solidity >=0.7.0 <0.9.0;
  * @title Accomodation Contract.
  * @dev Set & change owner
  */
-contract Stay
+contract Property
 {
-
+    address owner;
     constructor() 
     {
-
+        owner = msg.sender;
     }
 
     string private name;
