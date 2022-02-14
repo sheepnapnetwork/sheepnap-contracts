@@ -5,20 +5,23 @@ const WoolToken = artifacts.require("WoolToken");
 const SheepnapDAO = artifacts.require("SheepnapDAO");
 const Booken = artifacts.require("Booken");
 const Property = artifacts.require("Booken");
+const Badge = artifacts.require("Badge");
 
 require('chai')
     .use(require('chai-as-promised'))
     .should()
 
-contract('SheepnapDAO', ([owner, stakerOne, stakerTwo, propertyOwner ]) =>
+contract('SheepnapDAO', ([owner, stakerOne, stakerTwo, propertyOwner, badgeBuyer ]) =>
 {
-    let sheepnapDAO, woolToken, booken, property;
+    let sheepnapDAO, woolToken, booken, property, badge;
 
     before(async() => 
     {
         woolToken = await WoolToken.new();
         booken = await Booken.new();
-        sheepnapDAO = await SheepnapDAO.new(woolToken.address);
+        badge = await Badge.new();
+
+        sheepnapDAO = await SheepnapDAO.new(woolToken.address, badge.address);
         propertyContract = await Property.new();
         var weiToTransfer = web3.utils.toWei('1000', 'ether')
 
@@ -55,7 +58,7 @@ contract('SheepnapDAO', ([owner, stakerOne, stakerTwo, propertyOwner ]) =>
             var approvalPercentage = await sheepnapDAO.getApprovalPercentage();
             var minimalPercentageVoters = await sheepnapDAO.getMinimalPercentageVoters();
             
-            assert.equal(amountForRequest, 100);
+            assert.equal(amountForRequest, 100*10**18);
             assert.equal(approvalDaysToVote, 10);
             assert.equal(approvalPercentage, 50)
             assert.equal(minimalPercentageVoters, 30);
@@ -131,6 +134,38 @@ contract('SheepnapDAO', ([owner, stakerOne, stakerTwo, propertyOwner ]) =>
             assert.equal(approvalRequest.totalVoters, '1');
             assert.equal(approvalRequest.totalYes, '1');
         });
+    });
+
+    describe('Badge is minted correctly', async () =>
+    {
+        it('Badge can buy correctly', async() =>
+        {
+            var idNFT = 354;
+            var amountPrice = web3.utils.toWei('200');
+            var initialSheepnapDAOTokenAmount = await woolToken.balanceOf(sheepnapDAO.address);
+    
+            await woolToken.transfer(badgeBuyer, amountPrice);
+    
+            await woolToken
+            .approve(sheepnapDAO.address, amountPrice, 
+                { from : badgeBuyer });
+            await badge.transferOwnership(sheepnapDAO.address);
+            await sheepnapDAO.addNewBadgePrice(idNFT, amountPrice, { from : owner });
+            await sheepnapDAO.mintForBuy(idNFT, { from : badgeBuyer });
+    
+            //Assert
+            var expectedBalanceOfBuyer = await woolToken.balanceOf(badgeBuyer);
+            var expectedBalanceNFTOfBuyer = await badge.balanceOf(badgeBuyer, idNFT);
+            var expectedBalanceTokenOfSheepnapDAO = await woolToken.balanceOf(sheepnapDAO.address);
+
+            assert.equal(expectedBalanceOfBuyer, 0);
+            assert.equal(expectedBalanceNFTOfBuyer, 1);
+            
+            var initialAmountPlusNFTValue = parseInt(web3.utils.fromWei(initialSheepnapDAOTokenAmount)) +  parseInt(web3.utils.fromWei(amountPrice));
+            assert.equal(web3.utils.fromWei(expectedBalanceTokenOfSheepnapDAO),initialAmountPlusNFTValue.toString());
+    
+        });
+       
     });
 
 });
