@@ -1,70 +1,51 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.7.0 <0.9.0;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract Stakable
+abstract contract Stakable is Ownable
 {
-  struct Staker
-  {
-      uint256 balance;
-      uint256 timestampSince;      
-  }
+    uint private totalstake = 0;
+    uint private reward_per_token = 0;
 
-  ERC20 private woolToken;
-  
-  mapping(address => Staker) internal stakers;
-  mapping(address => bool) internal stakersActive;
-  uint internal totalStakers;
-  uint internal treasure;
+    mapping(address => uint) stakebyuser;
+    mapping(address => uint) reward_tally;
 
-  constructor(ERC20 _woolToken) 
-  {
-    woolToken = _woolToken;
-  }
-
-  function stake(uint _stakingamount) public
-  {
-    require(_stakingamount > 0, "Staking amount should be greater than 0");
-
-    Staker memory staker = Staker(
+    constructor()
     {
-      balance : _stakingamount,
-      timestampSince : block.timestamp
-    });
-    
-    stakersActive[msg.sender] = true;    
-    stakers[msg.sender] = staker;
-    woolToken.transferFrom(msg.sender, address(this), _stakingamount);
-  }
 
-  function unstake() public 
-  {
-    require(stakersActive[msg.sender], 'address is not currently staking');
+    }
 
-    woolToken.transfer(address(this), stakers[msg.sender].balance);
-    stakersActive[msg.sender] = false;
-  }
+    function deposit_stake(uint amount) public
+    {
+        address operator = _msgSender();
+        stakebyuser[operator] = stakebyuser[operator] + amount;
+        reward_tally[operator] = reward_tally[operator] + reward_per_token * amount;
+        totalstake = totalstake + amount;
+    }
 
-  function getStakeAmount() public view returns (uint)
-  {
-    return stakers[msg.sender].balance;
-  }
+    function distribute(uint reward) internal onlyOwner
+    {
+        reward_per_token = reward_per_token + reward / totalstake;
+    }
 
-  function addAmountToTreasure(uint _amount) internal
-  {
-    treasure += _amount;
-  }
+    function withdraw_stake(uint amount) public 
+    {
+        address operator = _msgSender();
+        stakebyuser[operator] =  stakebyuser[operator] - amount;
+        reward_tally[operator] = reward_tally[operator] - reward_per_token * amount;
+    }
 
-  function getStakeInfluence(address _address) internal view returns (uint)
-  {
-    return woolToken.balanceOf(_address);
-  }
+    function compute_reward(address useraddress) public view returns(uint)
+    {
+        return stakebyuser[useraddress] * reward_per_token - reward_tally[useraddress];
+    }
 
-  /* ========== EVENTS ========== */
-  event RewardAdded(uint256 reward);
-  event Staked(address indexed user, uint256 amount);
-  event Withdrawn(address indexed user, uint256 amount);
-  event RewardPaid(address indexed user, uint256 reward);
-  event RewardsDurationUpdated(uint256 newDuration);
-  event Recovered(address token, uint256 amount);
+    function withdraw_reward() public
+    {
+        address operator = _msgSender();
+        uint reward = compute_reward(operator);
+        reward_tally[operator] = stakebyuser[operator] * reward_per_token;
+        payable(operator).transfer(reward);
+    }
 }

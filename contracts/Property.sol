@@ -2,34 +2,59 @@
 
 pragma solidity >=0.7.0 <0.9.0;
 
+import "./Booken.sol";
+import "./IProperty.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 /**
- * @title Accomodation Contract.
+ * @title property Contract.
  * @dev Set & change owner
  */
-contract Property
+contract Property is IProperty, Ownable
 {
-    address owner;
-    constructor() 
-    {
-        owner = msg.sender;
-    }
+    using Strings for uint256;
 
-    string private name;
+    string private _name;
     string private staticDataRefence;
+    Booken private bookenContract;
+    ERC20 private paymentToken;
 
-    struct Coordinate {
-        uint256 lat;
-        uint256 long;
+    constructor(address _paymenttoken) { 
+        paymentToken = ERC20(_paymenttoken);
+        bookenContract = new Booken(_name);
     }
 
-    function getAddress() public view returns (address) {
-        return address(this);
-    }    
+    function emitBookens(
+        uint256[] memory _codes,
+        uint256[] memory _dates, 
+        uint _roomcode, 
+        uint price, 
+        RoomType roomtype) public onlyOwner
+    {
+        address operator = _msgSender();
+        for (uint256 i = 0; i < _codes.length; i++) {
+            bookenContract.safeMint(_codes[i], operator, _roomcode, uint(roomtype), _dates[i], price, 1);
+        }
+    }
 
-    /// @notice Explain to an end user what this does
-    /// @dev Explain to a developer any extra details
-    /// @param Documents a parameter just like in doxygen (must be followed by parameter name)
-    /// @return Documents the return variables of a contract’s function state variable
-    /// @inheritdoc	Copies all missing tags from the base function (must be followed by the contract name)
-    
+    function buyBooken(uint bookencode) public
+    {
+       require(bookenContract.ownerOf(bookencode) == address(this), "");
+       address operator = _msgSender();
+       uint amount = bookenContract.bookenData(bookencode).price;
+       paymentToken.transferFrom(operator, address(this), amount);
+       bookenContract.safeTransferFrom(address(this), msg.sender, bookencode);
+    }
+
+    function withdraw() public onlyOwner
+    {
+        address operator = _msgSender();
+        uint256 amount = paymentToken.balanceOf(address(this));
+        paymentToken.transfer(operator, amount);
+    }
+
+    function getMetadataUri() public view override returns(string memory)
+    {
+        return staticDataRefence;
+    }
 }

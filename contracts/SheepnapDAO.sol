@@ -3,8 +3,9 @@
 pragma solidity >=0.7.0 <0.9.0;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "./Review.sol";
 import "./Stakable.sol";
-import "./Badge.sol";
+import "./Property.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
@@ -16,189 +17,53 @@ contract SheepnapDAO is Stakable, Ownable {
 
     //== Contracts 
     ERC20 private token;
-    Badge private badge;
+    Review private _reviewcontract;
+    string _daowebsite;
 
     //==== DAO system parameters ===
-    uint256 private tokenAmountForApprovalRequest = 100 * 10 ** 18; //TODO : Fix
-    uint256 private approvalRequestDaysToVote = 10;
-    uint256 private approvalPercentage = 50;
-    uint256 private minimalPercentageVoters = 30;
+    uint256 private tokenAmountForRegister = 1000 * 10 ** 18;
+    uint256 private serviceFee = 100000 wei;
 
-    struct Property {
-        bool isApproved;
-        uint256 totalYes;
-        uint256 totalVoters;
-        uint256 registrationDate;
-        bool activeVoting;
-        uint256 treasureAmount;
-    }
+    mapping(address => bool) private _approvedProperties;
 
-    mapping(address => Property) private properties;
-    //voters, accommodation contract, vote
-    mapping(address => mapping(address => bool)) private voters;
-    //badges prices
-    mapping(uint => uint) private badgesAmount;
-
-    constructor(address _tokenaddress, address _badgeaddress) Stakable(ERC20(_tokenaddress)) {
+    constructor(address _tokenaddress) 
+        Stakable(ERC20(_tokenaddress)) {
         token = ERC20(_tokenaddress);
-        badge = Badge(_badgeaddress);
     }
 
-    function getTokenAmountForApprovalRequest() public view returns (uint256) {
-        return tokenAmountForApprovalRequest;
-    }
-
-    function getApprovalRequestDaysToVote() public view returns (uint256) {
-        return approvalRequestDaysToVote;
-    }
-
-    function getApprovalPercentage() public view returns (uint256) {
-        return approvalPercentage;
-    }
-
-    function getMinimalPercentageVoters() public view returns (uint256) {
-        return minimalPercentageVoters;
-    }
-
-    function getApprovalRequestInfo(address _propertyaddress)
-        public
-        view
-        returns (Property memory)
+    function registerProperty(address _propertyaddress) public 
     {
-        return properties[_propertyaddress];
+        require(_approvedProperties[_propertyaddress] == false, "Property is already registered");
+        token.transferFrom(msg.sender, address(this), tokenAmountForRegister);
+        _approvedProperties[_propertyaddress] = true;
+        emit RegisteredProperty(_propertyaddress);
     }
 
-    function addNewBadgePrice(uint _id, uint _amount) public onlyOwner {
-        badgesAmount[_id] = _amount;
-    }
-
-    function getPropertyActiveVoting(address _propertyaddress)
-        public
-        view
-        returns (bool)
+    function approveProperty(address _propertyaddress) public onlyOwner
     {
-        return properties[_propertyaddress].activeVoting;
+        _approvedProperties[_propertyaddress] = true;
     }
 
-    function approvalRequest(address _propertyaddress) public {
-        require(
-            !properties[_propertyaddress].activeVoting,
-            "Property has an active voting process"
-        );
-
-        require(
-            token.balanceOf(msg.sender) >= tokenAmountForApprovalRequest,
-            "Incorrect amount for approval request"
-        );
-
-        Property memory newProperty = Property({
-            isApproved: false,
-            totalYes: 0,
-            totalVoters: 0,
-            registrationDate: block.timestamp,
-            activeVoting: true,
-            treasureAmount: tokenAmountForApprovalRequest
-        });
-
-        properties[_propertyaddress] = newProperty;
-        token.transferFrom(
-            msg.sender,
-            address(this),
-            tokenAmountForApprovalRequest
-        );
-    }
-
-    function vote(address _propertyaddress, bool _vote) public {
-        require(stakersActive[msg.sender], "Voter must be an staker");
-        require(
-            stakers[msg.sender].balance > 0,
-            "Voter must have active stake"
-        );
-
-        //require(voters[_propertyaddress][msg.sender], "The voter already voted.");
-
-        require(
-            properties[_propertyaddress].activeVoting,
-            "property has not active voting"
-        );
-        require(
-            checkExpiry(properties[_propertyaddress].registrationDate),
-            "Voting has ended"
-        );
-
-        Property storage property = properties[_propertyaddress];
-        if (_vote) {
-            property.totalYes++;
-        }
-
-        property.totalVoters++;
-    }
-
-    function checkExpiry(uint256 _starttimestamp) private view returns (bool) {
-        return
-            _starttimestamp + (approvalRequestDaysToVote * 1 days) >=
-            block.timestamp;
-    }
-
-    function getVotingPower(address _stakerAddress)
-        public
-        view
-        returns (uint256)
+    function removeProperty(address _propertyaddress) public
     {
-        return stakers[_stakerAddress].balance;
+        address operator = _msgSender();
+        require(Property(_propertyaddress).owner() == operator || operator == owner());
+        _approvedProperties[_propertyaddress] = false;
     }
 
-    function finalizevoting(address _propertyaddress) public {
-        require(properties[_propertyaddress].activeVoting, "Voting is ended");
-        require(
-            checkExpiry(properties[_propertyaddress].registrationDate),
-            "Voting has not ended"
-        );
-
-        Property storage property = properties[_propertyaddress];
-
-        if (
-            getPercentage(property.totalYes, property.totalVoters) >
-            approvalPercentage &&
-            getPercentage(property.totalVoters, totalStakers) >
-            minimalPercentageVoters
-        ) {
-            property.isApproved = true;
-        }
-
-        property.activeVoting = false;
-    }
-
-    //TODO : add non reentrant validation
-    function withdrawvotingrewards(address _propertyaddress) public {
-        require(
-            !properties[_propertyaddress].activeVoting,
-            "Voting has not ended"
-        );
-        Property storage property = properties[_propertyaddress];
-        uint256 rewards = property.treasureAmount.div(property.totalVoters);
-        token.transferFrom(address(this), msg.sender, rewards);
-    }
-
-    function getPercentage(uint256 _amount, uint256 _totalamount)
-        private
-        pure
-        returns (uint256)
+    function buyBooken(address propertyaddress, uint256 bookencode) public payable
     {
-        return _amount.mul(100).div(_totalamount);
+       require(msg.value >= serviceFee);
+       Property property = Property(propertyaddress);
+       //TODO : call data?
+       property.buyBooken(bookencode);
     }
-
-    //TODO : add non reentrant validation
-    function mintForBuy(uint256 id) public 
-    {
-        uint amount = badgesAmount[id];
-        require(token.balanceOf(msg.sender) >= amount);
-        token.transferFrom(msg.sender, address(this), amount);
-        badge.mint(msg.sender, id, 1, "");
+    
+    function getPropertyIsApproved(address _propertyaddress) public view returns (bool){
+        return _approvedProperties[_propertyaddress];
     }
 
     //=== EVENTS ===== //
-    event ApprovalRequestCreated(address _accommodation);
-    event Voting(address indexed user, bool vote);
+    event RegisteredProperty(address _propertycontract);
     event WithdrawRewards(address _staker);
 }
